@@ -1,0 +1,18 @@
+
+
+HSCC LP:
+
+1) Linprog: 0.044 s
+2) Linprog + matrices: 0.073
+3) JuMP.optimize!: 0.02 s
+4) Declare LP + JuMP.optimize! = 0.06 s
+
+
+Dual:
+
+1) Evaluating obj in Julia for fixed (lambda,h): 0.002
+2) Evaluating obj 121 times for fixed (lambda,mu): 0.015
+3) Solve dual via grid search (100) matlab + matrices: 0.004 s
+4) Solve dual via grid search (10) matlab + matrices: 0.001 s
+5) Solve dual using golden section matlab: 0.001 s
+6) 40 iterations with golden section matlab: < 2.45 min

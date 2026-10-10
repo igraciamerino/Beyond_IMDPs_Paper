@@ -1,0 +1,26 @@
+
+clear
+clc
+close all
+
+%%
+
+A = [1 0.2; 0 0.5];
+b = [0.5, 0.4]';
+b_w = [0, 0.2]';
+
+s1 = zonotope( interval( [0, 0]', [0.5, 0.5]' ) );
+
+c1 = zonotope( interval([-1], [-0.5]) );
+c2 = zonotope( interval([-0.5], [0]) );
+c3 = zonotope( interval([0], [0.5]) );
+c4 = zonotope( interval([0.5], [1]) );
+
+R1 = plus( mtimes(A, s1), mtimes(b_w, c1) );
+
+figure
+plot(R1)
+hold on
+xlim(0)
+
+

@@ -1,0 +1,53 @@
+distX = abs( uint8(state_discretization.X_center(:)/state_discretization.Deltax) - uint8(state_discretization.X_center(:)'/state_discretization.Deltax) );
+distY = abs( uint8(state_discretization.Y_center(:)/state_discretization.Deltay) - uint8(state_discretization.Y_center(:)'/state_discretization.Deltay) );
+%distTH = abs( uint8(state_discretization.TH_center(:)/state_discretization.Deltath) - uint8(state_discretization.TH_center(:)'/state_discretization.Deltath) );
+distX = abs( distX - uint8(1) );
+distY = abs( distY - uint8(1) );
+%distTH = abs( distTH - uint8(1) );
+
+
+tic
+dist = zeros(user_param.Nq^2, 1, 'uint8');
+for q = 1:user_param.Nq^2
+    dist(q) = max([distX(q), distY(q)],[],2);
+%      % Display progress
+%     if (rem(q,100000) == 0)
+%         disp(q/user_param.Nq^2*100)
+%     end
+end
+toc
+
+%%
+Qnd = Q_nd{q,a};
+supp_P = support_P{q,a};
+distX = uint8( abs(state_discretization.X_center(Qnd)/state_discretization.Deltax - state_discretization.X_center(supp_P)'/state_discretization.Deltax) - 1 );
+distY = uint8( abs(state_discretization.Y_center(Qnd)/state_discretization.Deltay - state_discretization.Y_center(supp_P)'/state_discretization.Deltay) - 1 );
+distTH = uint8( abs(state_discretization.TH_center(Qnd)/state_discretization.Deltath - state_discretization.TH_center(supp_P)'/state_discretization.Deltath) - 1 );
+
+dist = max([distX(:) distY(:) distTH(:)], [],2);
+dist = reshape(dist,Qnd,support_P);
+
+
+
+%%
+
+dist = abs( uint8(state_discretization.X_center(:)/state_discretization.Deltax) - uint8(state_discretization.X_center(:)'/state_discretization.Deltax) );
+dist1 = abs( uint8(state_discretization.X_center(:)/state_discretization.Deltax) - uint8(state_discretization.X_center(:)'/state_discretization.Deltax) );
+dist = max([dist(:), dis2(:)],[],2);
+dist = max([dist(:), dist1(:)],[],2);
+
+
+tic
+dist = zeros(user_param.Nq, 'uint8');
+for q1 = 1:user_param.Nq
+    for q2 = 1:user_param.Nq
+        diffX = abs( state_discretization.X_center(q1) - state_discretization.X_center(q2) );
+        diffX = uint8( diffX/state_discretization.Deltax - uint8(1) );
+        diffY = abs( state_discretization.Y_center(q1) - state_discretization.Y_center(q2) );
+        diffY = uint8( diffY/state_discretization.Deltay  - uint8(1) );
+        diffTH = abs( state_discretization.TH_center(q1) - state_discretization.TH_center(q2) );
+        diffTH = uint8(diffTH/state_discretization.Deltath - uint8(1) );
+        dist(q1,q2) = max([diffX, diffY, diffTH]);
+    end
+end
+toc

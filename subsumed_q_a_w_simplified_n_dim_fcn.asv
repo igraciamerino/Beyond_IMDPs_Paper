@@ -1,0 +1,21 @@
+function [Sp_ind_subsumed,error_flag] = subsumed_q_a_w_simplified_n_dim_fcn(Sp, Sp_intersects_small, a_X, b_X, Nq, precision)
+% Compute bounds for transitions starting from q, under a
+
+if ( length(Sp_intersects_small) > 1)
+    Sp_ind_subsumed = false(size(Sp_intersects_small));
+    error_flag = false;
+    return;
+end
+
+Qp_subsumed_bool = false(Nq, 1);
+for ci = 1:Nq
+    if ( ismember( Sp_intersects_small, children_q{ci} ) )
+        Qp_subsumed_bool(ci) = true;
+        error_flag = false;
+        return
+    end
+end
+error_flag = true;
+disp('ERROR: Problem with subsumed...')
+
+end

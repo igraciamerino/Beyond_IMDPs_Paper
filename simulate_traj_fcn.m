@@ -1,0 +1,152 @@
+function [solution, x0_vect] = simulate_traj_fcn(original_sys, state_discretization, user_param, solver_opts, solution, variables_for_matrices, x0_vect)
+
+plotsamples = 0;
+tic
+
+if (solver_opts.MC_plot)
+    if ( strcmp(original_sys.name, 'unicycle3d_nl_friction') )
+        figure(102)
+    else
+        figure(5)
+        hold on
+    end
+end
+
+a_X = original_sys.state_space_lower_left_corner';
+b_X = original_sys.state_space_upper_right_corner';
+
+
+if ( original_sys.n == 2 )
+    X_center = state_discretization.X_center{1};
+    Y_center = state_discretization.X_center{2};
+elseif ( original_sys.n == 3 )
+    X_center = state_discretization.X_center{1};
+    Y_center = state_discretization.X_center{2};
+    Z_center = state_discretization.X_center{3};
+elseif ( original_sys.n == 4 )
+    X_center = state_discretization.X_center{1};
+    Y_center = state_discretization.X_center{2};
+    Z_center = state_discretization.X_center{3};
+    U_center = state_discretization.X_center{4};
+end
+
+if ( strcmp(original_sys.name, 'unicycle2d') )
+    sys = @(x, u, w) unicycle2D(x,u,w,original_sys,user_param);
+elseif ( strcmp(original_sys.name, 'unicycle3d_nl_friction') )
+    sys = @(x, u, w) unicycle3d_nl_friction(x,u,w,original_sys,user_param);
+elseif ( strcmp(original_sys.name, 'pendulum') )
+    sys = @(x, u, w) pendulum(x,u,w,original_sys,user_param);
+elseif ( strcmp(original_sys.name, 'mult_noise') )
+    sys = @(x, u, w) mult_noise_sys(x,original_sys.A,user_param);
+elseif ( strcmp(original_sys.name, 'unicycle2d_ltlf') )
+    sys = @(x, u, w) unicycle2D_ltlf(x,u,w,original_sys,user_param);
+elseif ( strcmp(original_sys.name, 'temp') )
+    sys = @(x, u, w) temp_sys(x,u,w,original_sys,user_param);
+end
+
+mygreen = 0.8*[0.39,0.83,0.07];
+% Initial state
+if ( ~solver_opts.reuse_x0_vect_yn )
+    x0_vect = zeros(original_sys.n, user_param.N_initial_states_MC_runs);
+    for i = 1:user_param.N_initial_states_MC_runs
+        is_x0_terminal = true;
+        while ( is_x0_terminal )
+            for di = 1:original_sys.n
+                x0_vect(di, i) = (b_X(di) - a_X(di))*rand(1) + a_X(di);
+            end
+            s0 = J_function(x0_vect(:, i), state_discretization, user_param, original_sys);
+            is_x0_terminal = ismember(s0, user_param.S_terminal);
+        end
+    end
+    user_param.x0_vect = x0_vect;
+else
+    user_param.x0_vect = x0_vect;
+end
+
+s0_vect = zeros(user_param.N_initial_states_MC_runs, 1);
+solution.MC_results = zeros(length(s0_vect),1);
+flag_validation = false;
+for index_x0 = 1:user_param.N_initial_states_MC_runs
+    %     s0 = x0_vect(index_s0);
+    %     if ( original_sys.n == 2)
+    %         x0 = [X_center(s0)
+    %             Y_center(s0)];
+    %     elseif ( original_sys.n == 3 )
+    %         x0 = [X_center(s0)
+    %             Y_center(s0)
+    %             Z_center(s0)];
+    %     elseif ( original_sys.n == 4 )
+    %         x0 = [X_center(s0)
+    %             Y_center(s0)
+    %             Z_center(s0)
+    %             U_center(s0)];
+    %     end
+    x0 = x0_vect(:, index_x0);
+    s0 = J_function(x0, state_discretization, user_param, original_sys);
+    s0_vect(index_x0) = s0;
+    counter = 0;
+    [samples1] = generate_samples_MC_fcn(original_sys, [], user_param, plotsamples, solver_opts);
+    for i = 1:user_param.MC_runs
+        % Solve a Monte Carlo run starting from x0
+        if ( strcmp( original_sys.name, 'unicycle2d_ltlf' ) )
+            [x_MC, MC_flag] = MC_run_unicycle2D_nl_friction(x0,state_discretization,user_param,solution.sigma_PROD,original_sys,samples1.Xi_hat, original_sys.Act, variables_for_matrices);
+            wraps = false;
+        elseif ( strcmp(original_sys.name, 'temp') )
+            [x_MC, MC_flag] = MC_run_temp(sys, x0, state_discretization,user_param,solution.sigma_C,original_sys,samples1.Xi_hat);
+        else
+            [x_MC, MC_flag, wraps] = MC_run(sys, x0, state_discretization,user_param,solution.sigma_C,original_sys,samples1.Xi_hat);
+        end
+        if (strcmp(MC_flag,'reach') == 1)
+            counter = counter + 1;
+            if (solver_opts.MC_plot && ~wraps)
+                if ( original_sys.n == 2 )
+                    plot(x_MC(1,:), x_MC(2,:),'Color',mygreen, 'LineStyle', '-','Linewidth',2)
+                    plot(x_MC(1,1), x_MC(2,1),'o','color','k','markersize',12,'markerfacecolor', mygreen)
+                    plot(x_MC(1,end), x_MC(2,end),'p','color','k','markersize',12,'markerfacecolor', mygreen)
+                elseif ( original_sys.n == 3)
+                    plot3(x_MC(1,:), x_MC(2,:), x_MC(3,:),'Color',mygreen, 'LineStyle', '-','Linewidth',2)
+                    plot3(x_MC(1,1), x_MC(2,1), x_MC(3,1),'o','color','k','markersize',12,'markerfacecolor', mygreen)
+                    plot3(x_MC(1,end), x_MC(2,end), x_MC(3,end),'p','color','k','markersize',12,'markerfacecolor', mygreen)
+                end
+            end
+        elseif ( (strcmp(MC_flag,'no reach') == 1) && (solver_opts.MC_plot) && ~wraps )
+            if ( original_sys.n == 2 )
+                plot(x_MC(1,:), x_MC(2,:),'Color','r', 'LineStyle', '-','Linewidth',2)
+            elseif ( original_sys.n == 3)
+                plot3(x_MC(1,:), x_MC(2,:), x_MC(3,:),'Color','r', 'LineStyle', '-','Linewidth',2)
+            end
+        end
+    end
+    solution.MC_results(index_x0) = counter/user_param.MC_runs;
+%     fprintf('Theoretical lb = %d. \n', solution.P_reach_lower(q0))
+%     fprintf('Empirical lb = %d. \n', solution.MC_results(index_q0))
+    if ( ( solution.P_reach_lower(s0) > solution.MC_results(index_x0) + 1e-3) || (solution.P_reach_upper(s0) + 1e-3 < solution.MC_results(index_x0)) )
+        disp('Problem in empirical validation...')
+        flag_validation = true;
+        break;
+    end
+end
+
+solution.MC_results_avg = mean( solution.MC_results );
+solution.P_reach_lower_avg = mean(solution.P_reach_lower(s0_vect));
+solution.P_reach_upper_avg = mean(solution.P_reach_upper(s0_vect));
+
+
+if ( (solution.P_reach_lower_avg > solution.MC_results_avg + 1e-3) || (solution.P_reach_upper_avg + 1e-3 < solution.MC_results_avg) )
+    flag_validation = true;
+end
+
+if (flag_validation)
+    disp('Problem in empirical validation...')
+else
+    disp('Empirical validation OK!')
+end
+
+fprintf('P_reach_lower theoretical = %f \n', solution.P_reach_lower_avg)
+fprintf('P_reach_upper theoretical = %f \n', solution.P_reach_upper_avg)
+fprintf('P_reach empirical = %f \n', solution.MC_results_avg)
+
+solution.MC_time = toc/60;
+fprintf('Simulation time = %f\n\n', solution.MC_time)
+
+end

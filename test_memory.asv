@@ -1,0 +1,59 @@
+
+if ( strcmp(solver_opts.abstraction_choice, 'mdpst') )
+
+    ss = 0;
+    for s = user_param.S_not_terminal
+        for a = 1:user_param.Na
+            for c = 1:user_param.Nc + 1
+                ss = ss + 2*length(solution.Qp{s,a}.children{c});
+            end
+        end
+    end
+    ss = ss + 8*length( solution.P_c );
+    ss
+
+    % 1.728653650000000e+09
+
+elseif ( strcmp(solver_opts.abstraction_choice, 'IMDP_w_support_single_goal') )
+
+    ss = 0;
+    for s = user_param.S_not_terminal
+        for a = 1:user_param.Na
+            ss = ss + 2*length(solution.Sp{s,a}) + 2*8*length(solution.Sp{s,a});
+        end
+    end
+
+    ss
+
+    % 859968018
+
+elseif ( strcmp(solver_opts.abstraction_choice, '2layer_single_goal') )
+
+    ss = 0;
+    for s = user_param.S_not_terminal
+        for a = 1:user_param.Na
+            ss = ss + 2*length(solution.Sp{s,a}) + 2*8*length(solution.Sp{s,a}) + 2*length(solution.Qp{s,a}) + 2*8*length(solution.Qp{s,a});
+        end
+    end
+    for q = 1:user_param.Nq + 1
+        ss = ss + 2*length( solution.children{q} );
+    end
+
+    ss = ss + 2*length( solution.parents )
+
+
+elseif ( strcmp(solver_opts.abstraction_choice, 'multi_imdp_single_goal_and_obs') )
+
+    ss = 0;
+    for s = user_param.S_not_terminal
+        for a = 1:user_param.Na
+            ss = ss + 2*length(solution.Sp{s,a}) + 2*8*length(solution.Sp{s,a}) + 2*8*length(solution.P_lower_coarse{s,a});
+            for c_i = 1:length( solution.Qp{s,a}.children_q )
+                ss = ss + 2*length(solution.Qp{s,a}.children_q{c_i});
+            end
+        end
+    end
+
+    ss
+
+end

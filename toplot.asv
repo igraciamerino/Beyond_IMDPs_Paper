@@ -1,0 +1,407 @@
+
+close all
+
+myred = [204/255 0 102/255];
+mypink = [204/255 0 204/255];
+mypurple = [102/255 0/255 204/255];
+myblue = [0 0 255/255];
+
+data_driven_yn = 0;
+
+if ( data_driven_yn )
+%     % ns = [42, 60, 75, 90, 100];
+%     % e_imdp = [0.132, 0.203, 0.179, 0.346, 0.456];
+%     % e_p_umdp = [0.0873, 0.093, , 0.0847 0.09];
+%     % e_umdp_st = [0.122, 0.089, , 0.0856, 0.0786];
+%     %
+%     % t_abs_imdp = [0.55, 1.1, 2.31, 3.57, 13.15];
+%     % t_abs_p_umdp = [0.91, 2.08, , 7.324, 13.19];
+%     % t_abs_umdp_st = [0.047, 0.1, , 0.24, 0.3];
+%     %
+%     % t_syn_imdp = [0.3, 14.78, 2.41, 8.4, 3.4];
+%     % t_syn_p_umdp = [1.16, 4.69, , 27.7, 46.07];
+%     % t_syn_umdp_st = [1.24, 2.08, , 4.836, 5.128];
+% 
+%     ns = [21^2, 30^2, 42^2, 60^2, 75^2, 90^2, 100^2];
+% 
+%     e_imdp = [0.147, 0.123, 0.132, 0.207, 0.172 0.346, 0.456];
+%     e_2layer = [0.139, 0.104, 0.112, 0.0991, 0.0982, 0.133, 0.122];
+%     e_p_umdp = [0.115, 0.088, 0.0873, 0.093, 0.078, 0.0847 0.09];
+%     e_umdp_st = [0.3, 0.097, 0.122, 0.089, 0.081 0.0856, 0.0786];
+%     e_imdp_st = [0.397, 0.113, 0.145, 0.1, 0.091, 0.095, 0.089];
+% 
+%     t_abs_imdp = [0.138, 0.271, 0.53, 0.81, 1.31, 2.332, 3.638];
+%     t_abs_2layer = [0.156, 0.331, 0.512, 1.334, 2.34, 2.41, 3.61];
+%     t_abs_p_umdp = [0.24, 0.42, 0.91, 2.08, 4.03, 7.324, 13.19];
+%     t_abs_umdp_st = [0.029, 0.022, 0.047, 0.1, 0.14, 0.24, 0.264];
+%     t_abs_imdp_st = [0.0293, 0.0405, 0.063, 0.115, 0.162, 0.226, 0.279];
+% 
+%     t_syn_imdp = [0.034, 0.097, 0.311, 1.42, 2.41, 8.4, 12.26];
+%     t_syn_2layer = [0.0724, 0.188, 0.59, 1.971, 3.875, 9.62, 14.37];
+%     t_syn_p_umdp = [0.13, 0.38, 1.16, 4.69, 9.82, 27.7, 46.07];
+%     t_syn_umdp_st = [0.51, 0.5, 1.24, 2.08, 2.73 4.836, 5.128];
+%     t_syn_imdp_st = [0.240, 0.216, 0.506, 0.80, 1.117, 1.782, 1.953];
+% 
+%     mem_imdp = [0.002428, 0.007062124, 0.019755310, 0.070674682, 0.138872182, 0.279654916, 0.416016220];
+%     mem_2layer = [0.003749658, 0.010206072, 0.026760468, 0.089628720, 0.172529178, 0.339286702, 0.498715870];
+%     mem_imdp_st = [0.013818308, 0.030331176, 0.059748602, 0.130938984, 0.208199680, 0.317085126, 0.395992972];
+%     mem_umdp_st = [0.014882722, 0.031117866, 0.062209046, 0.134063172, 0.214107602, 0.324144366, 0.403879704];
+%     mem_p_umdp = [0.007074048, 0.020227104, 0.054840936, 0.184573164, 0.279655606, 0.355661418, 1.011520116];
+%     % es = [e_imdp; e_p_umdp; e_umdp_st];
+% 
+%     figure(101);
+%     subplot(2,2,1); hold on; grid
+%     plot(ns, e_imdp, LineWidth=2, Marker="+")
+%     plot(ns, e_2layer, LineWidth=2, Marker="x")
+%     plot(ns, e_p_umdp, LineWidth=2, Marker="pentagram")
+%     plot(ns, e_imdp_st, LineWidth=2, Marker="square")
+%     plot(ns, e_umdp_st, LineWidth=2, Marker="diamond")
+%     legend('IMDP', '2-IMDP', 'poly-UMDP', 'IMDP-ST', 'UMDP-ST')
+%     xlabel('$|S|$','fontsize',14,'interpreter','latex')
+%     ylabel('$e_{avg} := \mathrm{avg}( \overline p^k - \underline p^k )$','fontsize',14,'interpreter','latex')
+%     set(gca,'FontSize',20)
+% 
+%     subplot(2,2,2); hold on; grid
+%     plot(ns, t_abs_imdp, LineWidth=2, Marker="+")
+%     plot(ns, t_abs_2layer, LineWidth=2, Marker="x")
+%     plot(ns, t_abs_p_umdp, LineWidth=2, Marker="pentagram")
+%     plot(ns, t_abs_imdp_st, LineWidth=2, Marker="square")
+%     plot(ns, t_abs_umdp_st, LineWidth=2, Marker="diamond")
+%     legend('IMDP', '2-IMDP', 'poly-UMDP', 'IMDP-ST', 'UMDP-ST')
+%     xlabel('$|S|$','fontsize',14,'interpreter','latex')
+%     ylabel('Abstraction Time (sec)','interpreter','latex')
+%     set(gca,'FontSize',20)
+% 
+%     subplot(2,2,3); hold on; grid
+%     plot(ns, t_syn_imdp, LineWidth=2, Marker="+")
+%     plot(ns, t_syn_2layer, LineWidth=2, Marker="x")
+%     plot(ns, t_syn_p_umdp, LineWidth=2, Marker="pentagram")
+%     plot(ns, t_syn_imdp_st, LineWidth=2, Marker="square")
+%     plot(ns, t_syn_umdp_st, LineWidth=2, Marker="diamond")
+%     legend('IMDP', '2-IMDP', 'poly-UMDP', 'IMDP-ST', 'UMDP-ST')
+%     xlabel('$|S|$','fontsize',14,'interpreter','latex')
+%     ylabel('Synthesis Time (sec)','interpreter','latex')
+%     set(gca,'FontSize',20)
+% 
+% 
+%     subplot(2,2,4); hold on; grid
+%     plot(ns, mem_imdp, LineWidth=2, Marker="+")
+%     plot(ns, mem_2layer, LineWidth=2, Marker="x")
+%     plot(ns, mem_p_umdp, LineWidth=2, Marker="pentagram")
+%     plot(ns, mem_imdp_st, LineWidth=2, Marker="square")
+%     plot(ns, mem_umdp_st, LineWidth=2, Marker="diamond")
+%     legend('IMDP', '2-IMDP', 'poly-UMDP', 'IMDP-ST', 'UMDP-ST')
+%     xlabel('$|S|$','fontsize',14,'interpreter','latex')
+%     ylabel('Memory (GB)','interpreter','latex')
+%     set(gca,'FontSize',20)
+
+else
+
+    ns = [30^2, 45^2, 60^2, 75^2];
+%     ns_2layer = [30^2, 42^2, 60^2, 75^2];
+
+res_imdp = [0.156, 0.235, 0.620, 0.017;
+            0.064, 0.597, 2.160, 0.076;
+            0.064, 1.280, 7.854, 0.236;
+            0.048, 2.395, 16.948, 0.577];
+res_2layer = [0.129, 0.359, 2.619, 0.018;
+              0.055, 0.853, 8.680, 0.082;
+              0.044, 1.707, 24.511, 0.255;
+              0.035, 2.960, 58.710, 0.626];
+res_mimdp = [0.099, 1.872, 3.709, 0.045;
+             0.039, 4.086, 11.060, 0.148;
+             0.029, 7.258, 22.850, 0.387;
+             0.023, 11.504, 56.672, 0.856];
+res_smdp = [0.083, 0.087, 0.695, 0.014;
+            0.033, 0.203, 1.580, 0.043;
+            0.027, 0.372, 2.659, 0.101;
+            0.020, 0.603, 4.455, 0.205];
+
+% 57 smdp 1.551414098479313e-02     3.237956000000000e-01     2.086327666666667e+00     8.509570399999999e-02
+
+% Old
+    
+%     e_imdp_Nd12 = [0.108, 0.054, 0.051, 0.037];
+%     e_2layer_Nd12 = [0.088, 0.0497, 0.032, 0.027];
+%     e_multi_imdp_Nd12 = [0.074, 0.043, 0.024, 0.020];
+%     e_mdp_st_Nd12 = [0.074, 0.033, 0.022, 0.013];
+%     e_imdp_st_Nd12 = [];
+% 
+%     t_abs_imdp_Nd12 = [0.255, 0.500, 1.337, 2.546];
+%     t_abs_2layer_Nd12 = [0.387, 0.767, 1.858, 3.040];
+%     t_abs_multi_imdp_Nd12 = [1.894, 3.890, 9.523, 13.785];
+%     t_abs_mdp_st_Nd12 = [0.105, 0.181, 0.432, 0.600];
+%     t_abs_imdp_st_Nd12 = [];
+% 
+%     t_syn_imdp_Nd12 = [0.796, 1.670, 9.945, 20.067];
+%     t_syn_2layer_Nd12 = [2.903, 6.778, 27.898, 68.040];
+%     t_syn_multi_imdp_Nd12 = [3.555, 8.524, 25.679, 60.579];
+%     t_syn_mdp_st_Nd12 = [0.786, 1.488, 2.791, 4.377];
+%     t_syn_imdp_st_Nd12 = [];
+
+
+    figure(201); hold on; grid
+    plot(ns, res_imdp(:, 1), LineWidth=2, Marker="+", Color = myred)
+    plot(ns, res_2layer(:, 1), LineWidth=2, Marker="x", Color=mypink)
+    plot(ns, res_mimdp(:, 1), LineWidth=2, Marker="pentagram", Color=mypurple)
+    plot(ns, res_smdp(:, 1), LineWidth=2, Marker="diamond", Color = myblue)
+    legend('IMDP', '2-IMDP', 'MI-MDP', 'SMDP')
+    xlabel('$|S|$','fontsize',14,'interpreter','latex')
+    ylabel('$e_{avg} := \mathrm{avg}( \overline p - \underline p )$','fontsize',14,'interpreter','latex')
+    set(gca,'FontSize',20)
+
+    figure(202); hold on; grid
+    plot(ns, 60*res_imdp(:, 2), LineWidth=2, Marker="+", Color = myred)
+    plot(ns, 60*res_2layer(:, 2), LineWidth=2, Marker="x", Color=mypink)
+    plot(ns, 60*res_mimdp(:, 2), LineWidth=2, Marker="pentagram", Color=mypurple)
+    plot(ns, 60*res_smdp(:, 2), LineWidth=2, Marker="diamond", Color = myblue)
+    %     legend('IMDP', '2-IMDP', 'MI-MDP', 'SMDP')
+    xlabel('$|S|$','fontsize',14,'interpreter','latex')
+    ylabel('Abstraction Time (sec)','interpreter','latex')
+    set(gca,'FontSize',20)
+    set(gca, 'YScale', 'log')
+
+    figure(203); hold on; grid
+    plot(ns, 60*res_imdp(:, 3), LineWidth=2, Marker="+", Color = myred)
+    plot(ns, 60*res_2layer(:, 3), LineWidth=2, Marker="x", Color=mypink)
+    plot(ns, 60*res_mimdp(:, 3), LineWidth=2, Marker="pentagram", Color=mypurple)
+    plot(ns, 60*res_smdp(:, 3), LineWidth=2, Marker="diamond", Color = myblue)
+    %     legend('IMDP', '2-IMDP', 'MI-MDP', 'SMDP')
+    xlabel('$|S|$','fontsize',14,'interpreter','latex')
+    ylabel('Synthesis Time (sec)','interpreter','latex')
+    set(gca,'FontSize',20)
+    set(gca, 'YScale', 'log')
+    
+    figure(204); hold on; grid
+    plot(ns, res_imdp(:, 4), LineWidth=2, Marker="+", Color = myred)
+    plot(ns, res_2layer(:, 4), LineWidth=2, Marker="x", Color=mypink)
+    plot(ns, res_mimdp(:, 4), LineWidth=2, Marker="pentagram", Color=mypurple)
+    plot(ns, res_smdp(:, 4), LineWidth=2, Marker="diamond", Color = myblue)
+    %     legend('IMDP', '2-IMDP', 'MI-MDP', 'SMDP')
+    xlabel('$|S|$','fontsize',14,'interpreter','latex')
+    ylabel('Memory (GB)','interpreter','latex')
+    set(gca,'FontSize',20)
+    set(gca, 'YScale', 'log')
+    
+end
+
+
+
+%% Temperature
+
+close all
+
+myred = [204/255 0 102/255];
+mypink = [204/255 0 204/255];
+mypurple = [102/255 0/255 204/255];
+myblue = [0 0 255/255];
+
+dim = [2, 3, 4];
+
+IMDP = [0.031, 0.0003, 0.0009, 0.000062532;
+           0.066, 0.010, 0.027, 0.004;
+           0.150, 0.740, 1.117, 0.200];
+SMDP = [0.013, 0.0003, 0.0021, 0.000033546;
+            0.015, 0.010, 0.099, 0.004251860;
+            0.021, 0.584, 6.822, 0.544];
+MIMDP = [0.016, 0.002, 0.091, 0.00013;
+            0.039, 0.170, 1.958, 0.010;
+            0.102, 39.257, 110.211, 0.828];
+twolayer = [0.030, 0.001, 0.002, 0.000076;
+                 0.065, 0.018, 0.053, 0.004;
+                 0.150, 1.245, 2.043, 0.205];
+
+% % n = 2
+% 
+% % 
+% IMDP_n2 = [0.031, 0.0003, 0.0009, 0.000062532];
+% MDPST_n2 = [0.013, 0.0003, 0.0021, 0.000033546];
+% MIMDP_n2 = [0.016, 0.002, 0.091, 0.00013];
+% IMDP2layer_n2 = [0.030, 0.001, 0.002, 0.000076];
+% 
+% % n = 3
+% 
+% IMDP_n3 = [0.066, 0.010, 0.027, 0.004];
+% MDPST_n3 = [0.015, 0.010, 0.099, 0.004251860];
+% MIMDP_n3 = [0.039, 0.170, 1.958, 0.010];
+% IMDP2layer_n3 = [0.065, 0.018, 0.053, 0.004];
+% 
+% % n = 4
+% 
+% IMDP_n4 = [0.150, 0.740, 1.117, 0.200];
+% MDPST_n4 = [0.021, 0.584, 6.822, 0.544];
+% MIMDP_n4 = [0.102, 39.257, 110.211, 0.828];
+% IMDP2layer_n4 = [0.150, 1.245, 2.043, 0.205];
+
+
+% figure(301);
+% semilogy(dim, [IMDP_n2(4), IMDP_n3(4), IMDP_n4(4)], LineWidth=2, Marker="+", Color=myred)
+% hold on; grid
+% semilogy(dim, [IMDP2layer_n2(4), IMDP2layer_n3(4), IMDP2layer_n4(4)], LineWidth=2, Marker="x", Color=mypink)
+% semilogy(dim, [MIMDP_n2(4), MIMDP_n3(4), MIMDP_n4(4)], LineWidth=2, Marker="pentagram", Color=mypurple)
+% semilogy(dim, [MDPST_n2(4), MDPST_n3(4), MDPST_n4(4)], LineWidth=2, Marker="diamond", Color=myblue)
+% legend('IMDP', '2-IMDP', 'MI-MDP', 'SMDP')
+% xlabel('n. Dimensions','interpreter','latex')
+% ylabel('Memory (GB)','interpreter','latex')
+% set(gca,'FontSize',20)
+% yticks([1e-5, 1e-4, 1e-3, 1e-2, 1e-1, 1])
+
+figure(201); hold on; grid
+    plot(dim, IMDP(:,1), LineWidth=2, Marker="+", Color = myred)
+    plot(dim, twolayer(:,1), LineWidth=2, Marker="x", Color=mypink)
+    plot(dim, MIMDP(:,1), LineWidth=2, Marker="pentagram", Color=mypurple)
+    plot(dim, SMDP(:,1), LineWidth=2, Marker="diamond", Color = myblue)
+    legend('IMDP', '2-IMDP', 'MI-MDP', 'SMDP')
+    xlabel('n. Dimensions','fontsize',14,'interpreter','latex')
+    ylabel('$e_{avg} := \mathrm{avg}( \overline p - \underline p )$','fontsize',14,'interpreter','latex')
+    set(gca,'FontSize',20)
+
+    figure(202); hold on; grid
+    plot(dim, 60*IMDP(:,2), LineWidth=2, Marker="+", Color = myred)
+    plot(dim, 60*twolayer(:,2), LineWidth=2, Marker="x", Color=mypink)
+    plot(dim, 60*MIMDP(:,2), LineWidth=2, Marker="pentagram", Color=mypurple)
+    plot(dim, 60*SMDP(:,2), LineWidth=2, Marker="diamond", Color = myblue)
+    xlabel('n. Dimensions','fontsize',14,'interpreter','latex')
+    ylabel('Abstraction Time (sec)','interpreter','latex')
+    set(gca,'FontSize',20)
+    set(gca, 'YScale', 'log')
+
+    figure(203); hold on; grid
+    plot(dim, 60*IMDP(:,3), LineWidth=2, Marker="+", Color = myred)
+    plot(dim, 60*twolayer(:,3), LineWidth=2, Marker="x", Color=mypink)
+    plot(dim, 60*MIMDP(:,3), LineWidth=2, Marker="pentagram", Color=mypurple)
+    plot(dim, 60*SMDP(:,3), LineWidth=2, Marker="diamond", Color = myblue)
+    xlabel('n. Dimensions','fontsize',14,'interpreter','latex')
+    ylabel('Synthesis Time (sec)','interpreter','latex')
+    set(gca,'FontSize',20)
+    set(gca, 'YScale', 'log')
+    yticks([1e-3, 1e-2, 1e-1, 1, 1e1, 1e2, 1e3, 1e4])
+    
+    figure(204); hold on; grid
+    plot(dim, IMDP(:,4), LineWidth=2, Marker="+", Color = myred)
+    plot(dim, twolayer(:,4), LineWidth=2, Marker="x", Color=mypink)
+    plot(dim, MIMDP(:,4), LineWidth=2, Marker="pentagram", Color=mypurple)
+    plot(dim, SMDP(:,4), LineWidth=2, Marker="diamond", Color = myblue)
+    xlabel('n. Dimensions','fontsize',14,'interpreter','latex')
+    ylabel('Memory (GB)','interpreter','latex')
+    set(gca,'FontSize',20)
+    set(gca, 'YScale', 'log')
+    yticks([1e-5, 1e-4, 1e-3, 1e-2, 1e-1, 1])
+
+%% Unicycle3D
+
+close all
+
+myred = [204/255 0 102/255];
+mypink = [204/255 0 204/255];
+mypurple = [102/255 0/255 204/255];
+myblue = [0 0 255/255];
+
+cs = [6^2, 8^2, 10^2];
+
+IMDP = [0.885, 2.800, 4.671, 0.625;
+        0.710, 4.650, 4.769, 0.586;
+        0.497, 6.571, 6.765, 0.554];
+SMDP = [0.558, 1.325, 10.563, 0.486;
+        0.367, 2.322, 14.228, 0.707;
+        0.260, 3.450, 24.414, 0.962];
+MIMDP = [0.740, 11.645, 347.826, 1.234;
+         -1, 26.646, -1, 1.517;
+         -1, 55.822, -1, 1.869];
+twolayer = [0.884, 4.710, 15.005, 0.633;
+            0.704, 7.625, 18.060, 0.594;
+            0.490, 12.303, 22.283, 0.562];
+
+figure(201); hold on; grid
+    plot(cs, IMDP(:,1), LineWidth=2, Marker="+", Color = myred)
+    plot(cs, twolayer(:,1), LineWidth=2, Marker="x", Color=mypink)
+%     plot(cs(1), MIMDP(1,1), LineWidth=2, Marker="pentagram", Color=mypurple)
+    plot(cs, SMDP(:,1), LineWidth=2, Marker="diamond", Color = myblue)
+    legend('IMDP', '2-IMDP', 'MI-MDP', 'SMDP')
+    xlabel('$|C|$','fontsize',14,'interpreter','latex')
+    ylabel('$e_{avg} := \mathrm{avg}( \overline p - \underline p )$','fontsize',14,'interpreter','latex')
+    set(gca,'FontSize',20)
+
+    figure(202); hold on; grid
+    plot(cs, 60*IMDP(:,2), LineWidth=2, Marker="+", Color = myred)
+    plot(cs, 60*twolayer(:,2), LineWidth=2, Marker="x", Color=mypink)
+    plot(cs, 60*MIMDP(:,2), LineWidth=2, Marker="pentagram", Color=mypurple)
+    plot(cs, 60*SMDP(:,2), LineWidth=2, Marker="diamond", Color = myblue)
+    xlabel('$|C|$','fontsize',14,'interpreter','latex')
+    ylabel('Abstraction Time (sec)','interpreter','latex')
+    set(gca,'FontSize',20)
+    set(gca, 'YScale', 'log')
+
+    figure(203); hold on; grid
+    plot(cs, 60*IMDP(:,3), LineWidth=2, Marker="+", Color = myred)
+    plot(cs, 60*twolayer(:,3), LineWidth=2, Marker="x", Color=mypink)
+%     plot(cs(1), 60*MIMDP(1,3), LineWidth=2, Marker="pentagram", Color=mypurple)
+    plot(cs, 60*SMDP(:,3), LineWidth=2, Marker="diamond", Color = myblue)
+    xlabel('$|C|$','fontsize',14,'interpreter','latex')
+    ylabel('Synthesis Time (sec)','interpreter','latex')
+    set(gca,'FontSize',20)
+    set(gca, 'YScale', 'log')
+    yticks([1e2, 1e3])
+    
+    figure(204); hold on; grid
+    plot(cs, IMDP(:,4), LineWidth=2, Marker="+", Color = myred)
+    plot(cs, twolayer(:,4), LineWidth=2, Marker="x", Color=mypink)
+    plot(cs, MIMDP(:,4), LineWidth=2, Marker="pentagram", Color=mypurple)
+    plot(cs, SMDP(:,4), LineWidth=2, Marker="diamond", Color = myblue)
+    xlabel('$|C|$','fontsize',14,'interpreter','latex')
+    ylabel('Memory (GB)','interpreter','latex')
+    set(gca,'FontSize',20)
+    set(gca, 'YScale', 'log')
+    yticks([1e-5, 1e-4, 1e-3, 1e-2, 1e-1, 1])
+
+%% Empirical results
+
+% Unicycle2d
+
+IMDP = [0.645, 1, 0.996
+        0.956, 1, 0.999
+        0.942, 1, 0.999
+        0.957, 1, 0.999];
+twolayer = [0.715, 1, 0.995
+            0.951, 1, 0.999
+            0.960, 1, 1
+            0.969, 1, 0.999];
+MIMDP = [0.907, 1, 0.998
+         0.965, 1, 0.999
+         0.975, 1, 1
+         0.981, 1, 1];
+SMDP = [0.923, 1, 0.999
+        0.971, 1, 0.999
+        0.968, 1, 0.999
+        0.984, 1, 0.999];
+
+% Temp
+
+IMDP = [0.974, 1, 1
+        0.928, 1, 1
+        0.857, 1, 1];
+twolayer = [0.975, 1, 1
+            0.940, 1, 1
+            0.851, 1, 1];
+MIMDP = [0.986, 1, 1
+         0.966, 1, 1
+         0.894, 1, 1];
+SMDP = [0.989, 1, 1
+        0.983, 1, 1
+        0.975, 1, 1];
+
+%% UNicycle 3D
+
+IMDP = [0.048, 0.976, 0.866
+        0.243, 0.975, 0.874
+        0.479, 0.972, 0.880];
+
+twolayer = [0.050, 0.976, 0.868
+            0.247, 0.975, 0.877
+            0.485, 0.972, 0.876];
+
+MIMDP = [0.218, 0.977, 0.910];
+
+SMDP = [0.4107, 0.969, 0.913
+        0.605, 0.968, 0.910
+        0.70];
