@@ -1,0 +1,190 @@
+function [solution, error_flags] = obtain_abstraction_IMDP_single_goal_obs_mult_noise_l4dc2025_fcn(user_param, state_discretization, original_sys, solver_opts, samples, solution)
+
+Act = original_sys.Act;
+Ns = user_param.Ns;
+Na = user_param.Na;
+N = user_param.N;
+rho = original_sys.rho;
+Deltax = state_discretization.Deltax;
+Deltay = state_discretization.Deltay;
+Nx = user_param.Nx;
+Ny = user_param.Ny;
+a_X = original_sys.state_space_lower_left_corner;
+b_X = original_sys.state_space_upper_right_corner;
+vertices_s = state_discretization.vertices_s;
+precision = solver_opts.precision;
+Xi_hat = samples.Xi_hat;
+Xi_hat_c = samples.Xi_hat_c;
+Lw_s_a = original_sys.Lw_s_a;
+size_cluster = samples.size_cluster;
+S_not_terminal = user_param.S_not_terminal;
+alpha = user_param.alpha;
+compute_clopper_pearson_table_yn = solver_opts.compute_clopper_pearson_table_yn;
+disp('Obtaining IMDP abstraction (w learned support)...')
+n_transitions_est = user_param.n_transitions_est;
+
+tic
+
+P_lower = cell(Ns+1, user_param.Na);
+P_upper = cell(Ns+1, user_param.Na);
+Sp = cell(Ns+1, user_param.Na);
+if (Ns + 1 < 65535)
+    aux_S = uint16( 1:(Ns + 1) );
+else
+    aux_S = uint32( 1:(Ns + 1) );
+end
+
+% First, estimate the support of w
+if (solver_opts.learn_support)
+    user_param.N_support = ceil( log(1/user_param.beta_support)/log(1/(1-user_param.epsilon_support)) );
+    if ( user_param.N_support > user_param.N )
+        disp('Pick a smaller epsilon_support...')
+        return
+    end
+    w_norm = zeros(1, user_param.N_support);
+    for wi = 1:user_param.N_support
+        w_norm(wi) = norm(samples.Xi_hat(:, wi), "inf");
+    end
+    solution.c = max( w_norm );
+else
+    solution.c = original_sys.rho;
+    user_param.epsilon_support = 0;
+end
+
+% Hoeffding's inequality
+beta = 0.5*alpha/n_transitions_est;
+solution.epsilon = sqrt( log(1/beta)/(2*user_param.N) );
+
+ii = 1;
+step = 1;
+error_flag_computing_abstraction = false;
+for s = S_not_terminal
+    for a = 1:user_param.Na
+        if ( ~user_param.controller_given_yn )
+            u = Act(:,a);
+        else
+            u = Act(:, solution.controller_given(s) );
+        end
+        % Compute Reach_nd_s_a
+        w = original_sys.center_samples; % Center of W
+        [a_Post_w0, b_Post_w0, error_flag_post] = compute_reach_simplified_mult_noise_fcn(vertices_s{s},u,w,original_sys,user_param);
+        % Inflate post to account support of P
+        [a_Reach_nd_s_a, b_Reach_nd_s_a] = compute_Reach_nd_simplified_q_u(a_Post_w0, b_Post_w0, original_sys.Lw_s_a{s,a}, solution.c);
+        % Check intersection with all Qp
+        [Sp_intersects, error_flag_intersections_nd] = intersections_simplified_single_goal_and_obs_fcn(a_Reach_nd_s_a, b_Reach_nd_s_a, Deltax, Deltay, Nx, Ny, Ns, a_X, b_X, solver_opts.precision, user_param);
+        Sp{s,a} = Sp_intersects;
+        aux_P_upper = zeros(Ns + 1,1);
+        aux_P_lower = zeros(Ns + 1,1);
+        for w_ind = 1:size( Xi_hat_c, 2 )
+            w = Xi_hat_c(:, w_ind);
+            % Compute Post_q_a_w
+            [a_Post, b_Post, error_flag_post] = compute_reach_simplified_mult_noise_fcn(state_discretization.vertices_s{s},u,w,original_sys,user_param);
+            % Inflate post to account for clustering
+            a_Post = a_Post - original_sys.Lw_s_a{s,a}*samples.size_cluster(w_ind);
+            b_Post = b_Post + original_sys.Lw_s_a{s,a}*samples.size_cluster(w_ind);
+            % Check intersection with all qp
+            [Sp_intersects, error_flag_intersections] = intersections_simplified_single_goal_and_obs_fcn(a_Post, b_Post, state_discretization.Deltax,  state_discretization.Deltay, user_param.Nx, user_param.Ny, Ns, a_X, b_X, solver_opts.precision, user_param);
+            % Check if post is subsumed by some qps
+            [Sp_ind_subsumed, error_flag_subsumed] = subsumed_q_a_w_simplified(a_Post, b_Post, state_discretization.vertices_s, Sp_intersects, original_sys.state_space_lower_left_corner, original_sys.state_space_upper_right_corner, Ns, solver_opts.precision);
+            for sp_ind = 1:length(Sp_intersects)
+                sp = Sp_intersects(sp_ind);
+                aux_P_upper(sp) = aux_P_upper(sp) + samples.weight_norm(w_ind);
+                if (Sp_ind_subsumed(sp_ind))
+                    aux_P_lower(sp) = aux_P_lower(sp) + samples.weight_norm(w_ind);
+                end
+            end
+            if ( (error_flag_post == true) || (error_flag_intersections == true) || (error_flag_subsumed == true) )
+                error_flag_computing_abstraction = true;
+                disp('Problem found...')
+            end
+        end
+        P_lower{s,a} = aux_P_lower(Sp{s,a});
+        P_upper{s,a} = aux_P_upper(Sp{s,a});
+
+        if ( (error_flag_intersections_nd == true) || (length(Sp{s,a}) ~= length(P_lower{s,a}) ) || (length(Sp{s,a}) ~= length(P_upper{s,a}) ) )
+            error_flag_computing_abstraction = true;
+            disp('Problem found...')
+        end
+    end
+    % Display progress
+    [ii, step] = disp_progress_fcn(length( S_not_terminal ), ii, 20, step);
+end
+
+
+% Make Nq+1 absorbing
+s = Ns + 1;
+for a = 1:user_param.Na
+    P_lower{s,a} = 1;
+    P_upper{s,a} = 1;
+    solution.support_P{s,a} = s;
+    Sp{s,a} = s;
+end
+
+
+solution.abstraction_time = toc/60;
+disp('Abstraction complete')
+disp(solution.abstraction_time)
+
+if ( original_sys.data_driven_yn )
+    % Compute epsion
+n_bounds_per_sp = 1;
+
+n_transitions_actual = 0;
+for s = S_not_terminal
+    if (isfield(user_param, 'Na'))
+        for a = 1:Na
+            n_transitions_actual = n_transitions_actual + n_bounds_per_sp*length( Sp{s,a} );
+        end
+    else
+        n_transitions_actual = n_transitions_actual + n_bounds_per_sp*length( Sp{q} );
+    end
+end
+
+fprintf('Actual number of transitions = %d. \n', n_transitions_actual)
+
+if ( n_transitions_actual > n_transitions_est)
+    disp('The estimated number of transitions is smaller than the actual number of transitions of the abstraction. Restart with a higher estimate...')
+    return
+end
+
+for s = S_not_terminal
+    for a = 1:Na
+        P_lower{s,a} = max(P_lower{s,a} - solution.epsilon, 0);
+        P_upper{s,a} = min(P_upper{s,a} + solution.epsilon, 1);
+    end
+end
+
+% Account for epsilon_support (assuming beta_support = alpha/2)
+for s = S_not_terminal
+    for a = 1:Na
+        if (Sp{s,a}(end) == Ns+1)
+            P_upper{s,a}(end) = min(1, P_upper{s,a}(end) + user_param.epsilon_support);
+        else
+            Sp{s,a} = [Sp{s,a}; Ns+1];
+            P_lower{s,a} = [P_lower{s,a}; 0];
+            P_upper{s,a} = [P_upper{s,a}; user_param.epsilon_support];
+        end
+    end
+end
+else
+    disp('No functionality...')
+end
+
+solution.P_lower = P_lower;
+solution.P_upper = P_upper;
+solution.Sp = Sp;
+solution.n_transitions = n_transitions_est;
+solution.beta = beta;
+solution.P_lower_coarse = [];
+solution.P_upper_coarse = [];
+solution.Qp = [];
+solution.children = [];
+solution.parents = [];
+
+error_flags.error_flag_intersections = error_flag_intersections;
+error_flags.error_flag_intersections_nd = error_flag_intersections_nd;
+error_flags.error_flag_post = error_flag_post;
+error_flags.error_flag_subsumed = error_flag_subsumed;
+error_flags.error_flag_computing_abstraction = error_flag_computing_abstraction;
+
+end
