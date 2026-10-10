@@ -1,0 +1,116 @@
+function is_correct_yn = check_abstraction_multi_imdp_fcn(solution, error_flags, solver_opts, user_param)
+
+Sp = solution.Sp;
+Qp = solution.Qp;
+P_lower = solution.P_lower;
+P_upper = solution.P_upper;
+P_lower_coarse = solution.P_lower_coarse;
+P_upper_coarse = solution.P_upper_coarse;
+Ns = user_param.Ns;
+S_not_terminal = user_param.S_not_terminal;
+
+error_flag_computing_abstraction = false;
+error_flag_check_abstraction = false;
+if (error_flag_computing_abstraction == false)
+    for s = S_not_terminal
+        for a = 1:user_param.Na
+            if ( ~isempty( Sp{s,a} ) && (length(Sp{s,a}) == length(P_lower{s,a})) && (length(Sp{s,a}) == length(P_upper{s,a})) )
+                for sp_ind = 1:length(Sp{s,a})
+                    if (P_lower{s,a}(sp_ind) > P_upper{s,a}(sp_ind) + solver_opts.precision)
+                        disp('Error computing the abstraction')
+                        error_flag_check_abstraction = true;
+                        break
+                    end
+                end
+            else
+                disp('Error computing the abstraction')
+                error_flag_check_abstraction = true;
+                break
+            end
+            if ( (sum(P_lower{s,a}) > 1 + solver_opts.precision) || (sum(P_upper{s,a}) < 1 - solver_opts.precision) )
+                disp('Error computing the abstraction')
+                error_flag_check_abstraction = true;
+                break
+            end
+            if (error_flag_check_abstraction)
+                break
+            end
+        end
+        if (error_flag_check_abstraction)
+            break
+        end
+    end
+    
+end
+
+% More checks
+
+if (error_flag_computing_abstraction == false)
+    for s = S_not_terminal
+        for a = 1:user_param.Na
+            Nq = Qp{s,a}.Nq;
+            if ( ( length(P_lower_coarse{s,a}) == Nq ) && ( length(P_upper_coarse{s,a}) == Nq ) )
+                for qp_ind = 1:Nq
+                    if (P_lower_coarse{s,a}(qp_ind) > P_upper_coarse{s,a}(qp_ind) + solver_opts.precision)
+                        disp('Error computing the abstraction')
+                        error_flag_check_abstraction = true;
+                        break
+                    end
+                end
+            else
+                disp('Error computing the abstraction')
+                error_flag_check_abstraction = true;
+                break
+            end
+            
+            % Check coherence between coarse and fine abstractions
+            for qp_ind = 1:Nq
+                children = Qp{s,a}.children_q{qp_ind};
+                if ( ~isempty( children ) )
+                    % If the cluster were empty, it's like it doesn't exist
+                    mysum_lb = 0;
+                    mysum_ub = 0;
+                    for sp = children'
+                        sp_index_in_Sp = find( Sp{s,a} == sp );
+                        if (~isempty(sp_index_in_Sp))
+                            mysum_lb = mysum_lb + P_lower{s,a}(sp_index_in_Sp);
+                            mysum_ub = mysum_ub + P_upper{s,a}(sp_index_in_Sp);
+                        else % children not contained in Q_nd: don't check this qp
+                            mysum_lb = 0;
+                            mysum_ub = 1;
+                            break;
+                        end
+                    end
+                    if ( (mysum_lb > P_lower_coarse{s,a}(qp_ind) + solver_opts.precision) || (mysum_ub + solver_opts.precision < P_upper_coarse{s,a}(qp_ind)) )
+                        disp('Error computing the abstraction')
+                        error_flag_check_abstraction = true;
+                        break
+                    end
+                end
+            end
+            % Don't check this for coarse
+%             if ( (sum(P_lower_coarse{s,a}) > 1 + solver_opts.precision) || (sum(P_upper_coarse{s,a}) < 1 - solver_opts.precision) )
+%                 disp('Error computing the abstraction')
+%                 error_flag_check_abstraction = true;
+%                 break
+%             end
+            if (error_flag_check_abstraction)
+                break
+            end
+        end
+        if (error_flag_check_abstraction)
+            break
+        end
+    end
+    
+end
+
+if ( (error_flag_check_abstraction == false) && ( ~error_flags.error_flag_intersections ) && ( ~error_flags.error_flag_intersections_nd_coarse ) && ( ~error_flags.error_flag_intersections_nd ) && ( ~error_flags.error_flag_intersections_nd_coarse ) && ( ~error_flags.error_flag_post ) && ( ~error_flags.error_flag_subsumed ) )
+    disp('Abstraction is correct')
+    is_correct_yn = true;
+else
+    disp('Problem found during abstraction')
+    is_correct_yn = false;
+end
+
+end
